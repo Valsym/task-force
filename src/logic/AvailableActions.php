@@ -1,6 +1,6 @@
 <?php
 namespace taskforce\logic;
-class Task
+class AvailableActions
 {
     const STATUS_NEW = 'new';
     const STATUS_IN_PROGRESS = 'proceed';
@@ -22,7 +22,7 @@ class Task
      * @param int $clientId
      * @param int|null $performerId
      */
-    public function __construct (string $status, int $clientId, ?int $performerId)
+    public function __construct (string $status, int $clientId, ?int $performerId = null)
     {
         $this->status = $status;
         $this->clientId = $clientId;

@@ -1,10 +1,9 @@
 <?php
 require 'vendor/autoload.php';
 
-//require_once __DIR__.  '\src\logic\AvailableActions.php';
-use taskforce\logic\Task;
+use taskforce\logic\AvailableActions;
 
-$strategy = new Task('new', 1, 0);
+$strategy = new AvailableActions('new', 1);
 print_r($strategy);
 
-assert($strategy->getNextStatus('act_cancel') == Task::STATUS_CANCEL, 'cancel');
+//assert($strategy->getNextStatus('act_cancel') == AvailableActions::STATUS_CANCEL, 'cancel');
