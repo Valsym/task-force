@@ -1,5 +1,10 @@
 <?php
 namespace taskforce\logic;
+
+use taskforce\logic\actions\CancelAction;
+use taskforce\logic\actions\ResponseAction;
+use taskforce\logic\actions\DenyAction;
+use taskforce\logic\actions\CompleteAction;
 class AvailableActions
 {
     const STATUS_NEW = 'new';
@@ -12,6 +17,9 @@ class AvailableActions
     const ACTION_CANCEL = 'act_cancel';
     const ACTION_DENY = 'act_deny';
     const ACTION_COMPLETE = 'act_complete';
+
+    const ROLE_CLIENT = 'client';
+    CONST ROLE_PERFORMER = 'performer';
 
     private int $clientId;
     private ?int $performerId;
@@ -27,6 +35,20 @@ class AvailableActions
         $this->status = $status;
         $this->clientId = $clientId;
         $this->performerId = $performerId;
+    }
+
+    public function getAvailableActions(string $role, int $id)
+    {
+        $statusActions = $this->statusAllowedActions($this->status);
+        $roleActions = $this->roleAllowedActions($role);
+
+        $allowedActions = array_intersect($statusActions, $roleActions);
+
+        $allowedActions = array_filter($allowedActions, function ($action) use ($id) {
+            return $action::checkRights($id, $this->clientId, $this->performerId);
+        });
+
+        return array_values($allowedActions);
     }
 
     /**
@@ -64,9 +86,10 @@ class AvailableActions
     public function getNextStatus(string $action)
     {
         $map = [
-            self::ACTION_COMPLETE => self::STATUS_COMPLETE,
-            self::ACTION_CANCEL => self::STATUS_CANCEL,
-            self::ACTION_DENY => self::STATUS_CANCEL,
+            CompleteAction::class => self::STATUS_COMPLETE,
+            CancelAction::class => self::STATUS_CANCEL,
+            DenyAction::class => self::STATUS_CANCEL,
+            ResponseAction::class => null,
         ];
 
         return $map[$action] ?? null;
@@ -91,13 +114,33 @@ class AvailableActions
         }
     }
 
-    public function statusAllowedActions(string $status): array
+    /**
+     * Возвращает действия доступные для каждого статуса
+     * @param string $status
+     * @return array|string[]
+     */
+    private function statusAllowedActions(string $status): array
     {
         $map = [
-            self::STATUS_NEW => [self::ACTION_CANCEL, self::ACTION_RESPONSE],
-            self::STATUS_IN_PROGRESS => [self::ACTION_DENY, self::ACTION_COMPLETE],
+            self::STATUS_NEW => [CancelAction::class, ResponseAction::class],
+            self::STATUS_IN_PROGRESS => [DenyAction::class, CompleteAction::class],
         ];
 
         return $map[$status] ?? [];
     }
+
+    /**
+     * Возвращает действия доступные для каждой роли
+     * @return array[]
+     */
+    private function roleAllowedActions(string $role): array
+    {
+        $map = [
+            self::ROLE_CLIENT => [CancelAction::class, CompleteAction::class],
+            self::ROLE_PERFORMER => [DenyAction::class, ResponseAction::class],
+        ];
+
+        return $map[$role];
+    }
+
 }

@@ -3,12 +3,15 @@ require 'vendor/autoload.php';
 
 use taskforce\logic\AvailableActions;
 
-$strategy = new AvailableActions('new', 1);
-print_r($strategy);
+$strategy = new AvailableActions(AvailableActions::STATUS_NEW,
+    1, 3);
 
-assert($strategy->getNextStatus('act_cancel') == AvailableActions::STATUS_CANCEL, 'cancel');
-print_r($strategy->getNextStatus('act_cancel'));
-print_r($strategy->getNextStatus('act_complete'));
-print_r($strategy->getNextStatus('act_deny'));
-print_r($strategy->getStatusMap()['new']);
-print_r($strategy->getActionsMap()['act_response']);
+var_dump('new -> performer', $strategy->getAvailableActions(
+    AvailableActions::ROLE_PERFORMER, 2));
+var_dump('new -> client, alien', $strategy->getAvailableActions(
+    AvailableActions::ROLE_CLIENT, 2));
+var_dump('new -> client, same', $strategy->getAvailableActions(
+    AvailableActions::ROLE_CLIENT, 1));
+
+var_dump('proceed -> performer, same', $strategy->getAvailableActions(
+    AvailableActions::ROLE_PERFORMER, 3));
